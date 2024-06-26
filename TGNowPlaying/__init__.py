@@ -1,6 +1,7 @@
 import sys
 import time
 import uvloop
+import colorama
 from pyrogram import Client
 from telegraph.aio import Telegraph
 from TGNowPlaying.settings import settings
@@ -16,7 +17,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     LOGGER(__name__).critical(
         """
 =============================================================
-You MUST need to be on python 3.7 or above, shutting down the bot...
+You MUST be on python 3.7 or above, shutting down the bot...
 =============================================================
 """
     )
@@ -29,28 +30,19 @@ except RuntimeError:
     set_event_loop(new_event_loop())
     loop = get_event_loop()
 
+colorama.init()
 
-LOGGER(__name__).info(
-    r"""                                         
-                                 .-'''-.                                                                                               
-                                '   _    \                                       .---.                                                 
-                     _..._    /   /` '.   \              _________   _...._      |   |                       .--.   _..._              
-          .--./)   .'     '. .   |     \  '       _     _\        |.'      '-.   |   |        .-.          .-|__| .'     '.   .--./)   
-     .|  /.''\\   .   .-.   .|   '      |  '/\    \\   // \        .'```'.    '. |   |         \ \        / /.--..   .-.   . /.''\\    
-   .' |_| |  | |  |  '   '  |\    \     / / `\\  //\\ //   \      |       \     \|   |    __    \ \      / / |  ||  '   '  || |  | |   
- .'     |\`-' /   |  |   |  | `.   ` ..' /    \`//  \'/     |     |        |    ||   | .:--.'.   \ \    / /  |  ||  |   |  | \`-' /    
-'--.  .-'/("'`    |  |   |  |    '-...-'`      \|   |/      |      \      /    . |   |/ |   \ |   \ \  / /   |  ||  |   |  | /("'`     
-   |  |  \ '---.  |  |   |  |                   '           |     |\`'-.-'   .'  |   |`" __ | |    \ `  /    |  ||  |   |  | \ '---.   
-   |  |   /'""'.\ |  |   |  |                               |     | '-....-'`    |   | .'.''| |     \  /     |__||  |   |  |  /'""'.\  
-   |  '.'||     |||  |   |  |                              .'     '.             '---'/ /   | |_    / /          |  |   |  | ||     || 
-   |   / \'. __// |  |   |  |                            '-----------'                \ \._,\ '/|`-' /           |  |   |  | \'. __//  
-   `'-'   `'---'  '--'   '--'                                                          `--'  `"  '..'            '--'   '--'  `'---'   
+LOGGER(__name__).info( colorama.Fore.CYAN +
+    r""" 
+    ______ _____ _  __              ___   __             _           
+/_  __// ___// |/ /___  _    __ / _ \ / /___ _ __ __ (_)___  ___ _
+ / /  / (_ //    // _ \| |/|/ // ___// // _ `// // // // _ \/ _ `/
+/_/   \___//_/|_/ \___/|__,__//_/   /_/ \_,_/ \_, //_//_//_/\_, / 
+                                             /___/         /___/  
+""" + colorama.Style.RESET_ALL)
 
 
-""") #TODO: ASCII ART
-
-
-LOGGER(__name__).info("creating telegraph session....")
+LOGGER(__name__).info( "creating telegraph session....")
 telegraph = Telegraph(domain="graph.org")
 
 LOGGER(__name__).info("initiating the client....")
