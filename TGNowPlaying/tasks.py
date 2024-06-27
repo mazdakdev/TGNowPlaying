@@ -15,7 +15,9 @@ async def periodic_task(app: Client, provider: str, channel_id: int):
             LOGGER(__name__).info(f"Updating channel with track: {track_name} by {artist_name}") 
 
             await app.set_chat_title(settings.CHANNEL_ID, f"{track_name} - {artist_name}")
-         
+
+            await app.delete_chat_photo(settings.CHANNEL_ID) # deletes the previous photo
+            
             photo = BytesIO(requests.get(track_image_url).content)
             await app.set_chat_photo(chat_id=settings.CHANNEL_ID, photo=photo)
     
