@@ -52,14 +52,48 @@ Features
 
 ## Contributions
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Contributions are, of course, welcome! Please open an issue or submit a pull request. For example, here is a step-by-step guide for adding a new provider:
 
+1. Create an Adapter for Your Provider:
+Navigate to the `adapters/` directory.
+Create a new Python file for your service adapter, e.g., `your_service.py`.
+Implement a class that inherits from `ProviderAdapter` and overrides the `fetch_current_item` method.
+
+```python
+from TGNowPlaying.adapters.base import ProviderAdapter
+from typing import Optional, Tuple
+
+class YourServiceAdapter(ProviderAdapter):
+    def __init__(self):
+        pass
+
+    async def fetch_current_item(self) -> Optional[Tuple[str, str, str]]:
+       title = do_sth_and_get_title()
+       message = f"Currently doing {title}"
+       image = do_sth_and_get_pfp()
+
+       return title, message, image
+```
+
+2. Register Your Adapter in the Factory:
+Open `factories/provider_factory.py`.
+Add an entry for your service in the `_adapters` dictionary.
+
+```python
+class ProviderAdapterFactory:
+    _adapters = {
+        "spotify": SpotifyAdapter,
+        "your_service": YourServiceAdapter,  # Add your service here
+    }
+    ....
+```
+
+3. Test and Submit a PR :)
 
 ## Happy Listening! 🎶
 
 
 ## TODO
 - [ ] Docs
-- [ ] better ascii art and colorama
 - [ ] Apple Music
 - [ ] Vscode presence (like Discord)
