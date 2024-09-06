@@ -1,26 +1,57 @@
-import asyncio
-import requests
-from io import BytesIO
-from pyrogram import Client
-from TGNowPlaying.helpers.utils import get_current_track
+from TGNowPlaying.factories.provider_factory import ProviderAdapterFactory
 from TGNowPlaying.logging import LOGGER
-from TGNowPlaying.settings import settings
+from pyrogram.client import Client
+from typing import Tuple, Optional
+from io import BytesIO
+import asyncio
+import httpx
 
+class TaskScheduler:
+    def __init__(self):
+        self.current_task = None
+        self.current_provider = None
 
-async def periodic_task(app: Client, provider: str, channel_id: int):
-    LOGGER(__name__).info("Starting predioc task....")
-    while True:
-        track_name, artist_name, track_image_url = get_current_track(provider)
-        if track_name and artist_name and track_image_url:
-            LOGGER(__name__).info(f"Updating channel with track: {track_name} by {artist_name}") 
+    def schedule_task(self, app: Client, provider: str, channel_id: int, interval: int = 300):
+        if self.current_task:
+            self.cancel_task()
 
-            await app.set_chat_title(settings.CHANNEL_ID, f"{track_name} - {artist_name}")
+        async def periodic_update():
+            while True:
+                try:
+                    await self.update_channel(app, provider, channel_id)
+                except Exception as e:
+                    LOGGER(__name__).error(f"Error in periodic task for {provider}: {e}")
+                await asyncio.sleep(interval)
 
-            await app.delete_chat_photo(settings.CHANNEL_ID) # deletes the previous photo
-            
-            photo = BytesIO(requests.get(track_image_url).content)
-            await app.set_chat_photo(chat_id=settings.CHANNEL_ID, photo=photo)
-    
-            await app.send_message(channel_id, f"Now Playing....")  
-        
-        await asyncio.sleep(300)  # Sleep for 5 minutes
+        self.current_task = asyncio.create_task(periodic_update())
+        self.current_provider = provider
+        LOGGER(__name__).info(f"Started periodic task for {provider}")
+
+    def cancel_task(self):
+        if self.current_task:
+            self.current_task.cancel()
+            LOGGER(__name__).info(f"Stopped periodic task for {self.current_provider}")
+            self.current_task = None
+            self.current_provider = None
+
+    @staticmethod
+    async def update_channel(app: Client, provider: str, channel_id: int) -> None:
+        adapter = ProviderAdapterFactory.get_adapter(provider)
+        current_item = await adapter.fetch_current_item()
+
+        if current_item:
+            title, message, image = current_item
+            LOGGER(__name__).info(f"Updating channel with track: {title}")
+
+            await app.set_chat_title(channel_id, title)
+            await app.delete_chat_photo(channel_id)
+
+            if image:
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(image)
+                photo = BytesIO(response.content)
+                await app.set_chat_photo(channel_id, photo=photo)
+
+            await app.send_message(channel_id, message)
+
+task_scheduler = TaskScheduler()

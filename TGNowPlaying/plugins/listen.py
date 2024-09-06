@@ -1,52 +1,36 @@
-"""
-Plugin that listens for music change
-"""
-
 from pyrogram import filters
 from pyrogram.types import Message
 from TGNowPlaying import bot
-from TGNowPlaying import BotStartTime
-from TGNowPlaying.tasks import periodic_task
+from TGNowPlaying.tasks import task_scheduler
 from TGNowPlaying.settings import settings
 from TGNowPlaying.logging import LOGGER
-import asyncio
-from io import BytesIO
-import requests
-
-
-current_task = None
 
 """
-Start listening on spotiy task.
-cmd: /listen_on_spotify
+Start listening on a provider task.
+cmd: /listen_on <provider>
 """
-@bot.on_message(filters.command("listen_on_spotify"))
-async def listen_on_spotify(_, message: Message):
-    global current_task
-    LOGGER(__name__).info("Received /listen_on_spotify command") 
+@bot.on_message(filters.command(["listen_on"]))
+async def listen_on(_, message: Message):
+    LOGGER(__name__).info("Received /listen_on command")
 
-    if current_task:
-        current_task.cancel()
+    if len(message.command) < 2:
+        await message.reply("Please specify a provider, use: /listen_on <provider_name>")
+        return
 
-        LOGGER(__name__).info("Canceled existing task") 
-
-    current_task = asyncio.create_task(periodic_task(bot, "spotify", settings.CHANNEL_ID))
-    LOGGER(__name__).info("Started listening to Spotify and updating channel")
-
+    provider = message.command[1]
+    task_scheduler.schedule_task(bot, provider, settings.CHANNEL_ID)
+    await message.reply(f"")
 
 """
-Cancels all listening tasks.
+Cancels the current provider listening task.
 cmd: /cancel
 """
-@bot.on_message(filters.command("cancel"))
+@bot.on_message(filters.command(["cancel"]))
 async def cancel_listening(_, message: Message):
-    global current_task
-    LOGGER(__name__).info("Received /cancel command") 
+    LOGGER(__name__).info("Received /cancel command")
 
-    if current_task:
-        current_task.cancel()
-        current_task = None
-        await message.reply("Stopped listening to music.")
+    if task_scheduler.current_task:
+        task_scheduler.cancel_task()
+        await message.reply("Stopped listening to the current provider.")
     else:
-        await message.reply("No listening task to cancel.")
-       
+        await message.reply("No active listening task to cancel.")
