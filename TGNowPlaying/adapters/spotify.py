@@ -29,7 +29,7 @@ class SpotifyAdapter(ProviderAdapter):
             image = track['album']['images'][0]['url'] if track['album']['images'] else ""
 
             title = f"{track_name} - {artist_name}"
-            message = f"Currently playing: {track_name} by {artist_name}"
+            message = f"Now listening to..."
 
             return title, message, image
 

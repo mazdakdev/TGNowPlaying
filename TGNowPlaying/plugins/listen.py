@@ -19,7 +19,7 @@ async def listen_on(_, message: Message):
 
     provider = message.command[1]
     task_scheduler.schedule_task(bot, provider, settings.CHANNEL_ID)
-    await message.reply(f"")
+    await message.reply(f"Done")
 
 """
 Cancels the current provider listening task.

@@ -43,7 +43,7 @@ LOGGER(__name__).info( colorama.Fore.CYAN +
 
 
 LOGGER(__name__).info( "creating telegraph session....")
-telegraph = Telegraph(domain="graph.org")
+telegraph = Telegraph()
 
 LOGGER(__name__).info("initiating the client....")
 plugins = dict(root="TGNowPlaying/plugins") 
