@@ -1,10 +1,11 @@
 from typing import Type
-from TGNowPlaying.adapters.spotify import SpotifyAdapter
+from TGNowPlaying.adapters.spotify import SpotifyAdapter, SpotifyLocalAdapter
 from TGNowPlaying.adapters.base import ProviderAdapter
 
 class ProviderAdapterFactory:
     _adapters = {
         "spotify": SpotifyAdapter,
+        "spotify-local": SpotifyLocalAdapter,
     }
 
     @staticmethod
