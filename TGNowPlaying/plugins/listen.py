@@ -4,6 +4,7 @@ from TGNowPlaying import bot
 from TGNowPlaying.tasks import task_scheduler
 from TGNowPlaying.settings import settings
 from TGNowPlaying.logging import LOGGER
+from TGNowPlaying.factories.provider_factory import ProviderAdapterFactory
 
 """
 Start listening on a provider task.
@@ -17,7 +18,13 @@ async def listen_on(_, message: Message):
         await message.reply("Please specify a provider, use: /listen_on <provider_name>")
         return
 
-    provider = message.command[1]
+    provider = message.command[1].strip().lower()
+
+    if not ProviderAdapterFactory.has_adapter(provider):
+        providers = ", ".join(ProviderAdapterFactory.available_providers())
+        await message.reply(f"Unknown provider: {provider}. Available providers: {providers}")
+        return
+
     task_scheduler.schedule_task(bot, provider, settings.CHANNEL_ID)
     await message.reply(f"Done")
 
