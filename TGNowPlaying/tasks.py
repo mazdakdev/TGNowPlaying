@@ -19,6 +19,8 @@ class TaskScheduler:
             while True:
                 try:
                     await self.update_channel(app, provider, channel_id)
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     LOGGER(__name__).error(f"Error in periodic task for {provider}: {e}")
                 await asyncio.sleep(interval)
@@ -44,13 +46,17 @@ class TaskScheduler:
             LOGGER(__name__).info(f"Updating channel with track: {title}")
 
             await app.set_chat_title(channel_id, title)
-            await app.delete_chat_photo(channel_id)
 
             if image:
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(image)
-                photo = BytesIO(response.content)
-                await app.set_chat_photo(channel_id, photo=photo)
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        response = await client.get(image)
+                        response.raise_for_status()
+                    photo = BytesIO(response.content)
+                    photo.name = "cover.jpg"
+                    await app.set_chat_photo(channel_id, photo=photo)
+                except httpx.HTTPError as e:
+                    LOGGER(__name__).warning(f"Failed to fetch track image: {e}")
 
             await app.send_message(channel_id, message)
 

@@ -1,4 +1,3 @@
-from typing import Type
 from TGNowPlaying.adapters.spotify import SpotifyAdapter, SpotifyLocalAdapter
 from TGNowPlaying.adapters.base import ProviderAdapter
 
@@ -15,3 +14,11 @@ class ProviderAdapterFactory:
             raise ValueError(f"Unknown provider: {provider_name}")
 
         return adapter_cls()
+
+    @staticmethod
+    def has_adapter(provider_name: str) -> bool:
+        return provider_name in ProviderAdapterFactory._adapters
+
+    @staticmethod
+    def available_providers() -> list[str]:
+        return sorted(ProviderAdapterFactory._adapters.keys())

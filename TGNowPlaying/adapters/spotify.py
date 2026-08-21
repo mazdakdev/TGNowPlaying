@@ -18,17 +18,26 @@ class SpotifyAdapter(ProviderAdapter):
 
     async def fetch_current_item(self) -> Optional[Tuple[str, str, str]]:
         try:
-            current_playback = self.sp.current_playback()
+            current_playback = await asyncio.to_thread(self.sp.current_playback)
         except spotipy.SpotifyException as e:
             logging.getLogger(__name__).error(f"Spotify API error: {e}")
             return None
 
-        if current_playback and current_playback['is_playing']:
-            track = current_playback['item']
+        if current_playback and current_playback.get("is_playing"):
+            track = current_playback.get("item")
+            if not track:
+                return None
 
-            track_name = track['name']
-            artist_name = ', '.join(artist['name'] for artist in track['artists'])
-            image = track['album']['images'][0]['url'] if track['album']['images'] else ""
+            track_name = track.get("name")
+            if not track_name:
+                return None
+
+            artists = track.get("artists") or []
+            artist_name = ", ".join(artist["name"] for artist in artists if artist.get("name")) or "Unknown Artist"
+
+            album = track.get("album") or {}
+            images = album.get("images") or []
+            image = images[0].get("url", "") if images else ""
 
             title = f"{track_name} - {artist_name}"
             message = f"Now listening to..."
