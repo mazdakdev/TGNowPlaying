@@ -190,6 +190,7 @@ pyrightconfig.json
 
 ### Telegram Sessions
 *.session
+*.session-journal
 
 ### logs and other txt files
 *.txt
