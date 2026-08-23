@@ -10,10 +10,13 @@ class TaskScheduler:
     def __init__(self):
         self.current_task = None
         self.current_provider = None
+        self.last_published_title = None
 
     def schedule_task(self, app: Client, provider: str, channel_id: int, interval: int = 300):
         if self.current_task:
             self.cancel_task()
+
+        self.last_published_title = None
 
         async def periodic_update():
             while True:
@@ -35,14 +38,18 @@ class TaskScheduler:
             LOGGER(__name__).info(f"Stopped periodic task for {self.current_provider}")
             self.current_task = None
             self.current_provider = None
+            self.last_published_title = None
 
-    @staticmethod
-    async def update_channel(app: Client, provider: str, channel_id: int) -> None:
+    async def update_channel(self, app: Client, provider: str, channel_id: int) -> None:
         adapter = ProviderAdapterFactory.get_adapter(provider)
         current_item = await adapter.fetch_current_item()
 
         if current_item:
             title, message, image = current_item
+            if title == self.last_published_title:
+                LOGGER(__name__).info(f"Skipping duplicate track update: {title}")
+                return
+
             LOGGER(__name__).info(f"Updating channel with track: {title}")
 
             await app.set_chat_title(channel_id, title)
@@ -59,5 +66,6 @@ class TaskScheduler:
                     LOGGER(__name__).warning(f"Failed to fetch track image: {e}")
 
             await app.send_message(channel_id, message)
+            self.last_published_title = title
 
 task_scheduler = TaskScheduler()
